@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Video Stream Manipulation</title>
+    <style>
+      #video {
+        width: 100%;
+        height: auto;
+      }
+      #canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <video id="video" autoplay></video>
+    <canvas id="canvas" style="border: 1px solid red"></canvas>
+
+    <script>
+      // Get the video and canvas elements from the HTML document
+      const videoElement = document.getElementById('video');
+      const canvasElement = document.getElementById('canvas');
+      const ctx = canvasElement.getContext('2d');
+
+      // Request access to the user's webcam
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          // Set the video stream as the source for the video element
+          videoElement.srcObject = stream;
+
+          // When the video metadata is loaded, set the canvas size to match the video dimensions
+          videoElement.addEventListener('loadedmetadata', () => {
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+          });
+
+          // Start modifying the video stream in real-time
+          function modifyVideoStream() {
+            // Draw the current video frame onto the canvas
+            ctx.drawImage(
+              videoElement,
+              0,
+              0,
+              canvasElement.width,
+              canvasElement.height
+            );
+
+            // Perform modifications on the canvas image data
+            // For example, you can apply filters, add overlays, or manipulate pixels
+            const imageData = ctx.getImageData(
+              0,
+              0,
+              canvasElement.width,
+              canvasElement.height
+            );
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+              // Invert the colors of each pixel
+              data[i] = 255 - data[i]; // Red
+              data[i + 1] = 255 - 0.5 * data[i + 1]; // Green
+              data[i + 2] = 255 - data[i + 2]; // Blue
+            }
+            ctx.putImageData(imageData, 0, 0);
+
+            // Request the next animation frame to continue modifying the video stream
+            requestAnimationFrame(modifyVideoStream);
+          }
+
+          // Start modifying the video stream
+          modifyVideoStream();
+        })
+        .catch((error) => {
+          console.error('Error accessing webcam:', error);
+        });
+    </script>
+  </body>
+</html>
